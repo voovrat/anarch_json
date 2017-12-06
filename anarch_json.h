@@ -83,7 +83,7 @@ public:
    param & operator [] ( int i ) { return child_by_id(i); }
    param & operator [] ( const std::string &name) { return child_by_name(name);   }
 
-   bool hasParam( const std::string &name) const { return m_children.find(name) != m_children.end();  }
+   bool hasParam( const std::string &name) const { return m_name_map.find(name) != m_name_map.end();  }
 
    operator const char *() const { return data().c_str(); }
    operator const std::string &() const { return data(); }

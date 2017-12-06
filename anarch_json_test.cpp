@@ -27,7 +27,7 @@ try{
   std::cout<<prm["output"]<<std::endl;
   std::cout<<prm[0]<<std::endl;
   std::cout<<prm["coulomb"]["type"]<<std::endl;
-  std::cout<<(std::string)prm["atom"]["type"][2]<<std::endl;
+  std::cout<<(const std::string &)prm["atom"]["type"][2]<<std::endl;
   double total_mass = 0;
   int i;
   for(i=0;i< len(prm["atom"]["mass"]); i++ )
