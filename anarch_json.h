@@ -53,7 +53,7 @@ public:
   const std::list< param > & children() const  { return m_children;}
         std::list< param > & vchildren() { return m_children; }
 
-  param & child_by_name(std::string name)  {  
+  param & child_by_name  (std::string  name)  {  
     if(m_name_map.find(name) == m_name_map.end()) throw std::string("sub-parameter ") + name + " of parameter " + this->name() + " not found";
     return *(m_name_map.find(name)->second);
    }
@@ -75,8 +75,56 @@ public:
   param &push_new() {
       m_children.push_back( param() ); 
       m_id_map[ m_children.size()-1] = &m_children.back();
+      char str[256];
+      sprintf(str,"%d",(int)m_children.size()-1);
+      m_children.back().vname() = str;
       return m_children.back(); 
   }
+  
+  param &push_new( const char *_name, const char *_data="" )
+  {
+  	param & p = push_new();
+	p.vname() = _name;
+	p.vdata() = _data;
+	link(p);
+	return p;
+  }
+
+  param &push_new( const char *_name, double d )
+  {
+	char s[256];
+	sprintf(s,"%30.20lf",d);  
+  	return push_new(_name,s); 
+  }
+
+  param &push_new( const char *_name, int d )
+  {
+  char s[256];
+  sprintf(s,"%d",d);  
+    return push_new(_name,s); 
+  }
+
+  param &push_data( const char * _data )
+  {
+  	param &p = push_new();
+	p.vdata() = _data;
+	return p;
+  }
+
+  param &push_data( double d )
+  {
+  	char s[256];
+	sprintf(s,"%30.20lf",d);
+	return push_data(s);
+  }
+
+  param &push_data( int d )
+  {
+    char s[256];
+  sprintf(s,"%d",d);
+  return push_data(s);
+  }
+
 
   void link( param & child ) { m_name_map[ child.name() ] = &child; }
 
