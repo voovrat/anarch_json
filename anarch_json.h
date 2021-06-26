@@ -49,23 +49,45 @@ public:
 
   const std::string & data() const  { return m_data;}
         std::string & vdata() { return m_data;}
+        void setData( const char &s ) { m_data = s; }
+        void setData( double d ) { 
+        		std::stringstream ss;
+        		ss << d;
+        		m_data = ss.str();
+        }
 
   const std::list< param > & children() const  { return m_children;}
         std::list< param > & vchildren() { return m_children; }
 
-  param & child_by_name  (std::string  name)  {  
+  const param & child_by_name(const std::string & name) const
+  {  
     if(m_name_map.find(name) == m_name_map.end()) throw std::string("sub-parameter ") + name + " of parameter " + this->name() + " not found";
     return *(m_name_map.find(name)->second);
+  }
+
+  param & child_by_name( const std::string &name ) 
+  {
+    const param * const_this = reinterpret_cast<const param *>(this);
+    return (param &) const_this->child_by_name( name );
+
+  }
+
+   const param & child_by_id(int id) const
+   {  
+      if(m_id_map.find(id) == m_id_map.end()) {
+        char s[256]; sprintf(s,"%d",id);  
+        throw std::string("invalid id ") + s+ " of parameter " + this->name();
+      }
+      return *(m_id_map.find(id)->second);
+   } 
+
+   param & child_by_id( int id) 
+   {
+    const param * const_this = reinterpret_cast<const param *>(this);
+    return (param &) const_this->child_by_id( id );
    }
 
-   param & child_by_id(int id)  {  
-    if(m_id_map.find(id) == m_id_map.end()) {
-       char s[256]; sprintf(s,"%d",id);  
-       throw std::string("invalid id ") + s+ " of parameter " + this->name();
-    }
-    return *(m_id_map.find(id)->second);
-   }
-  
+ 
   void push_back( param & child ) 
    {  m_children.push_back(child); 
       m_id_map[ m_children.size()-1] = &child; 
@@ -129,13 +151,63 @@ public:
   void link( param & child ) { m_name_map[ child.name() ] = &child; }
 
    param & operator [] ( int i ) { return child_by_id(i); }
-   param & operator [] ( const std::string &name) { return child_by_name(name);   }
+   const param & operator [] (int i) const { return child_by_id(i); }
 
+   param & operator [] ( const std::string &name) { return child_by_name(name);   }
+   const param & operator [] (const std::string & name ) const { return child_by_name( name ); }
+
+   param & operator [] ( const char * name) { return child_by_name(std::string(name));   }
+   const param & operator [] ( const char * name ) const { return child_by_name( std::string(name) ); }
+
+
+   param &rval( const std::string &name )  
+   {
+      if( !hasParam(name) )
+      {
+          param & p = push_new();
+          p.vname() = name;
+          link( p );
+      }
+
+      return child_by_name( name );
+
+   }
+
+
+   param & rval ( const char *name )  {
+      return rval( std::string( name )) ;
+   }
+
+   
    bool hasParam( const std::string &name) const { return m_name_map.find(name) != m_name_map.end();  }
+   
+
+   double dval( const std::string &name, double d ) const 
+   {
+     return hasParam(name) ? (double)(*this)[name] : d;
+   } 
+
+   double ival( const std::string &name, int i ) const 
+   {
+     return hasParam(name) ? (int)(*this)[name] : i;
+   } 
+
+   double uval( const std::string &name, uint u ) const 
+   {
+     return hasParam(name) ? (uint)(*this)[name] : u;
+   } 
+
+
+   const std::string & sval( const std::string &name, const std::string &s ) const 
+   {
+     return hasParam(name) ? (const std::string &)(*this)[name] : s;
+   }
 
    operator const char *() const { return data().c_str(); }
    operator const std::string &() const { return data(); }
    operator const double ()  const { return strtod(data().c_str(),NULL); }
+   operator const int    ()  const { return (int)(double)*this;  }
+   operator const uint   ()  const { return (uint)(double)*this; }
 
 };
 
