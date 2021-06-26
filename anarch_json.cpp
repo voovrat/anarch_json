@@ -9,57 +9,73 @@ std::ostream & anarch_json::operator<<(std::ostream &os, const param &prm)
    os<<prm.name()<<":"<<prm.data();
    if(len(prm)>0)
    {
-      os<<"{";
+      os<<"{ ";
       std::list<param>::const_iterator it;
       for( it = prm.children().begin();
            it != prm.children().end();
            it++)
       {
-         if( it != prm.children().begin()) os<<",";
+         if( it != prm.children().begin()) os<<"\n,";
          os<<*it;
       }
 
-      os<<"}";
+      os<<"}\n";
    }
   return os;
 }
 
 void  anarch_json::read_param( std::istream &is, param &r , int id) 
-{
-  parse::skip_space_and_comments( is );
-  std::string name = parse::str( is );
-  r.vname() = name;
-
-  parse::skip_space_and_comments( is );
-
-  if( is.peek() != ':' && is.peek() != '=' ) 
-   { r.vdata() = name;
-     
-     char s[256];  sprintf(s,"%d",id);
-     r.vname() = s;
-     return;
-   }
-
-  char sign = parse::character(  is , ":=");
+{ char s[256]; 
 
   parse::skip_space_and_comments( is );
   
-  if( is.peek() != '{' && is.peek() != '[' ) 
-  {
-     r.vdata() = parse::str( is );
-     return;
+  if( is.peek() == '[' || is.peek() == '{')
+  { 
+    sprintf(s,"%d",id);
+    r.vname() =  s;
   }
+  else {    
+    std::string name = parse::str( is );
+    r.vname() = name;
+
+    parse::skip_space_and_comments( is );
+
+    if( is.peek() != ':' && is.peek() != '=' ) 
+    { r.vdata() = name;
+     
+        sprintf(s,"%d",id);
+       r.vname() = s;
+       return;
+    }
+
+    char sign = parse::character(  is , ":=");
+
+    parse::skip_space_and_comments( is );
+  
+    if( is.peek() != '{' && is.peek() != '[' ) 
+    {
+       r.vdata() = parse::str( is );
+      return;
+    }
+  }
+
 
   is.get();
 
- 
-  do {
+  parse::skip_space_and_comments(is);
+
+  //if( is.peek() == '}' || is.peek() == ']' ) 
+  
+
+  //do {
+  while( !is.eof() && is.peek() != '}' && is.peek() != ']' )
+  {
         if( is.peek() == ',')  is.get();  
          param &p  = r.push_new();
          read_param(is, p , len(r)-1 );
          r.link(p);
          parse::skip_space_and_comments( is );
-   } while( !is.eof() && is.peek() != '}' && is.peek() != ']' );           
+   }            
   if(!is.eof()) is.get();
 
 }
